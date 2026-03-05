@@ -181,21 +181,40 @@
                 });
             });
 
+<<<<<<< HEAD
     tableBody.innerHTML = htmlFinal;
     
     const totalItens = itens.length;
     // Calcula a média de diferença (onde a Dental Maria não venceu)
     const itensQuePerdemos = itens.flatMap(i => i.concorrentes)
         .filter(c => c.empresa.includes("DENTAL MARIA") && c.diferenca > 0);
+=======
+            tableBody.innerHTML = htmlFinal;
+<<<<<<< HEAD
+            
+            const totalItens = itens.length;
+            // Calcula a média de diferença (onde a Dental Maria não venceu)
+            const itensQuePerdemos = itens.flatMap(i => i.concorrentes)
+                .filter(c => c.empresa.includes("DENTAL MARIA") && c.diferenca > 0);
+>>>>>>> 7c0b390a56cd2a29689e2e42e5b9a1cbe93d2cf3
 
     const mediaDiferenca = itensQuePerdemos.length > 0
         ? itensQuePerdemos.reduce((acc, cur) => acc + cur.diferenca, 0) / itensQuePerdemos.length
         : 0;
 
+<<<<<<< HEAD
     // Atualiza os Cards no HTML (Certifique-se de colocar IDs nos seus <p> de resumo)
     document.getElementById('cardTotalItens').innerText = totalItens;
     document.getElementById('cardMediaDistancia').innerText = mediaDiferenca.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+=======
+            // Atualiza os Cards no HTML (Certifique-se de colocar IDs nos seus <p> de resumo)
+            document.getElementById('cardTotalItens').innerText = totalItens;
+            document.getElementById('cardMediaDistancia').innerText = mediaDiferenca.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+=======
+>>>>>>> c84e3cb18589d58680a16cd10033dd0a0c25fb3d
+        }
+>>>>>>> 7c0b390a56cd2a29689e2e42e5b9a1cbe93d2cf3
     </script>
 
 </body>
