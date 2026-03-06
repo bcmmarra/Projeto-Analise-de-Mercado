@@ -99,113 +99,78 @@
 
     </main>
 
-    <script>
-        const fileInput = document.getElementById('inputPlanilha');
-        const processBtn = document.getElementById('btnProcessar');
-        const tableBody = document.querySelector('tbody');
+<script>
+    const fileInput = document.getElementById('inputPlanilha');
+    const processBtn = document.getElementById('btnProcessar');
+    const tableBody = document.querySelector('tbody');
 
-        async function executarProcessamento(event) {
-            // 1. BLOQUEIO IMEDIATO
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-
-            const fileInput = document.getElementById('inputPlanilha');
-            const processBtn = document.getElementById('btnProcessar');
-            const file = fileInput.files[0];
-
-            if (!file) return alert("Selecione um arquivo!");
-
-            // Interface de carregamento
-            processBtn.innerText = "Processando...";
-            processBtn.disabled = true;
-
-            const formData = new FormData();
-            formData.append('arquivo', file);
-
-            try {
-                const response = await fetch('http://127.0.0.1:5000/api/processar', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const dadosJson = await response.json();
-
-                // Só renderiza se os dados chegarem
-                if (dadosJson) {
-                    renderizarTabelaMVC(dadosJson);
-                }
-
-            } catch (error) {
-                console.error("Erro:", error);
-            } finally {
-                processBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Processar Dados';
-                processBtn.disabled = false;
-            }
-
-            // 2. BLOQUEIO DE RETORNO
-            return false;
+    async function executarProcessamento(event) {
+        // Bloqueio de Refresh
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
         }
 
+        const file = fileInput.files[0];
+        if (!file) return alert("Selecione um arquivo!");
 
-        processBtn.onclick = async function (e) {
-            if (e) e.preventDefault();
+        processBtn.innerText = "Processando...";
+        processBtn.disabled = true;
 
-            const file = fileInput.files[0];
-            if (!file) return alert("Selecione um arquivo!");
+        const formData = new FormData();
+        formData.append('arquivo', file);
 
-            processBtn.innerText = "Processando...";
-            processBtn.disabled = true;
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/processar', {
+                method: 'POST',
+                body: formData
+            });
 
-            const formData = new FormData();
-            formData.append('arquivo', file);
+            if (!response.ok) throw new Error("Erro no servidor");
 
-            try {
-                const response = await fetch('http://127.0.0.1:5000/api/processar', {
-                    method: 'POST',
-                    body: formData
-                });
+            const dadosJson = await response.json();
 
-                if (!response.ok) throw new Error("Erro no servidor");
-
-                const dadosJson = await response.json();
+            if (dadosJson) {
                 renderizarTabelaMVC(dadosJson);
-
-            } catch (error) {
-                console.error("Erro:", error);
-                alert("Erro ao processar: " + error.message);
-            } finally {
-                processBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Processar Dados';
-                processBtn.disabled = false;
             }
-        };
 
-        function renderizarTabelaMVC(itens) {
-            tableBody.innerHTML = "";
-            let htmlFinal = "";
-            let totalDiferenca = 0;
-            let contagemPerdas = 0;
+        } catch (error) {
+            console.error("Erro:", error);
+            alert("Erro ao processar: " + error.message);
+        } finally {
+            processBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Processar Dados';
+            processBtn.disabled = false;
+        }
 
-            itens.forEach(item => {
-                htmlFinal += `
+        return false;
+    }
+
+    function renderizarTabelaMVC(itens) {
+        tableBody.innerHTML = "";
+        let htmlFinal = "";
+        let totalDiferenca = 0;
+        let contagemPerdas = 0;
+
+        itens.forEach(item => {
+            htmlFinal += `
                 <tr class="bg-gray-800 text-white shadow-md">
                     <td colspan="5" class="px-6 py-3 text-sm font-bold uppercase">
                         ITEM ${item.item} - ${item.descricao}
                     </td>
                 </tr>`;
 
-                item.concorrentes.forEach(concorrente => {
-                    const eMinhaEmpresa = concorrente.empresa.toUpperCase().includes("DENTAL MARIA");
-                    const classe = eMinhaEmpresa ? "bg-blue-100 border-l-8 border-blue-600" : "hover:bg-gray-50 border-b";
+            item.concorrentes.forEach(concorrente => {
+                const empresaNome = concorrente.empresa.toUpperCase();
+                const eMinhaEmpresa = empresaNome.includes("DENTAL MARIA");
+                const classe = eMinhaEmpresa ? "bg-blue-100 border-l-8 border-blue-600" : "hover:bg-gray-50 border-b";
 
-                    // Acumula dados para os cards
-                    if (eMinhaEmpresa && concorrente.diferenca > 0) {
-                        totalDiferenca += concorrente.diferenca;
-                        contagemPerdas++;
-                    }
+                // Lógica de cálculo para os Cards
+                if (eMinhaEmpresa && concorrente.diferenca > 0) {
+                    totalDiferenca += concorrente.diferenca;
+                    contagemPerdas++;
+                }
 
-                    htmlFinal += `
+                htmlFinal += `
                     <tr class="${classe}">
                         <td class="px-6 py-4 text-center">${concorrente.posicao}</td>
                         <td class="px-6 py-4 ${eMinhaEmpresa ? 'font-bold text-blue-900' : ''}">${concorrente.empresa}</td>
@@ -215,50 +180,23 @@
                              ${concorrente.diferenca === 0 ? 'VENCEDOR' : '+ R$ ' + concorrente.diferenca.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
                     </tr>`;
-                });
             });
+        });
 
-<<<<<<< HEAD
-    tableBody.innerHTML = htmlFinal;
-    
-    const totalItens = itens.length;
-    // Calcula a média de diferença (onde a Dental Maria não venceu)
-    const itensQuePerdemos = itens.flatMap(i => i.concorrentes)
-        .filter(c => c.empresa.includes("DENTAL MARIA") && c.diferenca > 0);
-=======
-            tableBody.innerHTML = htmlFinal;
-<<<<<<< HEAD
-            
-            const totalItens = itens.length;
-            // Calcula a média de diferença (onde a Dental Maria não venceu)
-            const itensQuePerdemos = itens.flatMap(i => i.concorrentes)
-                .filter(c => c.empresa.includes("DENTAL MARIA") && c.diferenca > 0);
->>>>>>> 7c0b390a56cd2a29689e2e42e5b9a1cbe93d2cf3
+        tableBody.innerHTML = htmlFinal;
 
-    const mediaDiferenca = itensQuePerdemos.length > 0
-        ? itensQuePerdemos.reduce((acc, cur) => acc + cur.diferenca, 0) / itensQuePerdemos.length
-        : 0;
+        // Atualização dos Cards de Resumo
+        const campoQtd = document.getElementById('qtdItens');
+        const campoMedia = document.getElementById('distanciaMedia');
 
-<<<<<<< HEAD
-    // Atualiza os Cards no HTML (Certifique-se de colocar IDs nos seus <p> de resumo)
-    document.getElementById('cardTotalItens').innerText = totalItens;
-    document.getElementById('cardMediaDistancia').innerText = mediaDiferenca.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-=======
-            // Atualiza os Cards no HTML (Certifique-se de colocar IDs nos seus <p> de resumo)
-            document.getElementById('cardTotalItens').innerText = totalItens;
-            document.getElementById('cardMediaDistancia').innerText = mediaDiferenca.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-=======
->>>>>>> c84e3cb18589d58680a16cd10033dd0a0c25fb3d
-        }
->>>>>>> 7c0b390a56cd2a29689e2e42e5b9a1cbe93d2cf3
-
-            // Atualiza os Cards (Verifique se os IDs nos <p> do seu HTML batem com esses)
-            document.getElementById('qtdItens').innerText = itens.length;
+        if (campoQtd) campoQtd.innerText = itens.length;
+        
+        if (campoMedia) {
             const media = contagemPerdas > 0 ? (totalDiferenca / contagemPerdas) : 0;
-            document.getElementById('distanciaMedia').innerText = media.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            campoMedia.innerText = media.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
-    </script>
+    }
+</script>
 
 </body>
 
